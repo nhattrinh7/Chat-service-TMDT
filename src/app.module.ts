@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import Joi from 'joi'
 import { ZodValidationPipe } from 'nestjs-zod'
@@ -8,6 +8,7 @@ import { ApplicationModule } from '~/application/application.module'
 import { InfrastructureModule } from '~/infrastructure/infrastructure.module'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
 import { APP_GUARD } from '@nestjs/core'
+import { RequestLoggingMiddleware } from '~/common/middleware/request-logging.middleware'
 
 
 @Module({
@@ -48,4 +49,8 @@ import { APP_GUARD } from '@nestjs/core'
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestLoggingMiddleware).forRoutes('{*path}')
+  }
+}

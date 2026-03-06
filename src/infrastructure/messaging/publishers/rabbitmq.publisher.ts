@@ -1,44 +1,27 @@
-import { Injectable, Inject } from '@nestjs/common'
-import { ClientProxy } from '@nestjs/microservices'
-import { lastValueFrom } from 'rxjs/internal/lastValueFrom'
+import { Injectable, Inject, Logger } from '@nestjs/common'
+import { ClientProxy, RmqRecordBuilder } from '@nestjs/microservices'
 import { IMessagePublisher } from '~/domain/contracts/message-publisher.interface'
+import { getKongRequestId } from '~/common/context/request-context'
 
 @Injectable()
 export class RabbitMQPublisher implements IMessagePublisher {
+  private readonly logger = new Logger(RabbitMQPublisher.name)
+
   constructor(
-    @Inject('NOTIFICATION_CLIENT') 
+    @Inject('NOTIFICATION_CLIENT')
     private readonly notificationClient: ClientProxy,
-    @Inject('SHOP_CLIENT') 
-    private readonly shopClient: ClientProxy,
-    @Inject('USER_CLIENT') 
-    private readonly userClient: ClientProxy,
-    @Inject('CATALOG_CLIENT')
-    private readonly catalogClient: ClientProxy,
-    @Inject('VOUCHER_CLIENT')
-    private readonly voucherClient: ClientProxy,
   ) {}
 
+  private buildRecord<T>(event: T) {
+    return new RmqRecordBuilder(event)
+      .setOptions({
+        headers: { 'kong-request-id': getKongRequestId() },
+      })
+      .build()
+  }
+
   publish<T>(pattern: string, event: T): void {
-    this.notificationClient.emit(pattern, event)
-  }
-
-  async sendToUserService<T, R = any>(pattern: string, data: T): Promise<R> {
-    const response$ = this.userClient.send<R, T>(pattern, data)
-    return lastValueFrom(response$)
-  }
-
-  async sendToShopService<T, R = any>(pattern: string, data: T): Promise<R> {
-    const response$ = this.shopClient.send<R, T>(pattern, data)
-    return lastValueFrom(response$)
-  }
-
-  async sendToCatalogService<T, R = any>(pattern: string, data: T): Promise<R> {
-    const response$ = this.catalogClient.send<R, T>(pattern, data)
-    return lastValueFrom(response$)
-  }
-
-  async sendToVoucherService<T, R = any>(pattern: string, data: T): Promise<R> {
-    const response$ = this.voucherClient.send<R, T>(pattern, data)
-    return lastValueFrom(response$)
+    this.logger.debug(`[${getKongRequestId()}] Emit ${pattern} → notification-service`)
+    this.notificationClient.emit(pattern, this.buildRecord(event))
   }
 }

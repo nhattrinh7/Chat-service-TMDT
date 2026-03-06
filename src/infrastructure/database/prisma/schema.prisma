@@ -9,193 +9,75 @@ datasource db {
   url      = env("DATABASE_URL") 
 }
 
-enum OrderStatus {
-  PENDING_PAYMENT
-  AWAITING_CONFIRMATION
-  PREPARING
-  SHIPPING
-  COMPLETED
-  CANCELLED
-  RETURNED // chắc mình ko làm cái trả hàng hoàn tiền này
-  PAYMENT_FAILED
-}
-// COD: AWAITING_CONFIRMATION ngay
-// Online - thành công: PENDING_PAYMENT → thanh toán OK → AWAITING_CONFIRMATION
-// Online - thất bại: PENDING_PAYMENT → thanh toán thất bại → CANCELLED
-// COD thì shipper giao hàng và thu tiền hộ thành công + người mua nhấn đã nhận dc hàng (hoặc timeout 3 ngày)
-// mới chuyển status sang COMPLETED, thanh toán online thì shipper giao 
-// thành công và người mua nhấn đã nhận dc hàng (hoặc timeout 3 ngày) là đã ok r và chuyển sang COMPLETED dc rồi
-
-enum OrderPaymentMethod {
-  COD
-  WALLET
-  QRCODE
+enum SenderType {
+  USER
+  SHOP
 }
 
-model Order {
-  id                   String      @id @default(uuid()) @db.Uuid
-  // paymentId có giá trị khi đơn hàng thanh toán QRCODE thành công, không có giá trị khi
-  // người dùng chọn thanh toán COD hoặc WALLET
-  paymentId            String?             @map("payment_id") @db.Uuid
-  userId               String              @map("user_id") @db.Uuid
-  shopId               String              @map("shop_id") @db.Uuid
-  status               OrderStatus         @default(AWAITING_CONFIRMATION)
-  paymentMethod        OrderPaymentMethod  @map("payment_method")
-  shippingAddress      String              @map("shipping_address")
-  receiverName         String              @map("receiver_name")
-  receiverPhoneNumber  String              @map("receiver_phone_number")
-  subtotal             Int                 // Tổng tiền chưa giảm giá
-  shippingFee          Int                 @map("shipping_fee") // Cố định là 1000
-  szoneVoucherDiscount Int                 @default(0) @map("szone_voucher_discount")
-  shopVoucherDiscount  Int                 @default(0) @map("shop_voucher_discount")
-  finalPrice           Int                 @map("final_price")
-  createdAt            DateTime            @default(now()) @map("created_at")
-  updatedAt            DateTime            @updatedAt @map("updated_at")
-
-  orderItems OrderItem[]
-  settlement Settlement?
-
-  @@map("orders")
+enum MessageType {
+  TEXT
+  IMAGE
 }
 
-model OrderItem {
-  id               String  @id @default(uuid()) @db.Uuid
-  orderId          String  @map("order_id") @db.Uuid
-  productId        String  @map("product_id") @db.Uuid
-  productVariantId String  @map("product_variant_id") @db.Uuid
-  productName      String  @map("product_name")
-  variantImage     String  @map("variant_image") @db.Text
-  sku              String  // Nâu-XL
-  quantity         Int
-  finalPrice       Int     // Giá 1 đơn vị tại thời điểm mua (đã tính vouchers)
+model Conversation {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid // Reference to User Service - người mua hàng
+  shopId String @map("shop_id") @db.Uuid // Reference to Shop Service
 
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  // Denormalized last message info for performance (cập nhật mỗi khi có tin nhắn mới)
+  lastMessageId         String?     @map("last_message_id") @db.Uuid
+  lastMessageContent    String?     @map("last_message_content")
+  lastMessageType       MessageType? @map("last_message_type")
+  lastMessageAt         DateTime?   @map("last_message_at") @db.Timestamptz
+  lastMessageSenderId   String?     @map("last_message_sender_id") @db.Uuid
+  lastMessageSenderType SenderType? @map("last_message_sender_type")
 
-  @@map("order_items")
+  // Đếm tin nhắn chưa đọc cho từng bên
+  unreadCountUser Int @default(0) @map("unread_count_user")
+  unreadCountShop Int @default(0) @map("unread_count_shop")
+
+  // ID tin nhắn cuối mà mỗi bên đã đọc
+  lastReadMessageIdUser String? @map("last_read_message_id_user") @db.Uuid
+  lastReadMessageIdShop String? @map("last_read_message_id_shop") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  messages Message[]
+
+  @@unique([userId, shopId]) // 1 cặp user-shop chỉ có 1 conversation
+  @@index([userId, updatedAt(sort: Desc)]) // User list conversations, sắp xếp theo tin nhắn mới nhất
+  @@index([shopId, updatedAt(sort: Desc)]) // Shop list conversations, sắp xếp theo tin nhắn mới nhất
+
+  @@map("conversations")
 }
 
-// Sau khi shipper giao hàng thành công sẽ tạo bản ghi Settlement, shipper giao thành công sẽ gửi api chứa orderId lên BE
-// dùng orderId này để lấy ra bản ghi Order và dùng dữ liệu từ bản ghi Order này để tạo bản ghi Settlement
-// goodsPrice = finalPrice của Order
-// commissionFee = finalPrice * 5%
-// payout = finalPrice - commissionFee
-model Settlement {
-  id                String        @id @default(uuid()) @db.Uuid
-  orderId           String        @unique @map("order_id") @db.Uuid
-  shopId            String        @map("shop_id") @db.Uuid
-  goodsPrice        Int           @map("goods_price")
-  commissionFee     Int           @map("commission_fee")
-  payout            Int
-  paymentMethod     PaymentMethod @default(WALLET) @map("payment_method")
-  status            PayoutStatus  @default(PENDING)
-  payoutAt          DateTime?     @map("payout_at") @db.Timestamptz
-  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+model Message {
+  id             String      @id @default(uuid()) @db.Uuid
+  conversationId String      @map("conversation_id") @db.Uuid
+  senderId       String      @map("sender_id") @db.Uuid // userId hoặc shopId tùy theo senderType
+  senderType     SenderType  @map("sender_type")
+  messageType    MessageType @default(TEXT) @map("message_type")
+  message        String?     // Text content hoặc image URL
 
-  order Order @relation(fields: [orderId], references: [id])
+  // Reply - denormalized để tránh N+1 queries
+  replyToMessageId      String?     @map("reply_to_message_id") @db.Uuid
+  replyToMessageContent String?     @map("reply_to_message_content") // Nội dung tin nhắn gốc tại thời điểm reply
+  replyToSenderType     SenderType? @map("reply_to_sender_type") // Người gửi tin nhắn gốc
 
-  @@map("settlements")
+  // Soft delete
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz // null = chưa xóa, có giá trị = đã xóa
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  replyToMessage Message?     @relation("MessageReply", fields: [replyToMessageId], references: [id])
+  replies        Message[]    @relation("MessageReply")
+
+  @@index([conversationId, createdAt(sort: Desc)]) // Load messages cursor-based pagination
+  @@index([conversationId, deletedAt]) // Filter soft-deleted messages
+
+  @@map("messages")
 }
-
-enum PaymentMethod {
-  WALLET
-}
-
-enum PayoutStatus {
-  PENDING    // Chưa cộng vào ví seller
-  COMPLETED  // Đã cộng vào ví seller
-}
-
-model TransitWarehouse {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String   @db.VarChar(255)
-  address   String   @db.Text
-
-  @@map("transit_warehouses")
-}
-
-model OrderDeliveryHistory {
-  id                String   @id @default(uuid()) @db.Uuid
-  orderId           String   @map("order_id") @db.Uuid
-  warehouses        Json?    @map("warehouse_history")
-  shipper           Json?
-}
-
-/*
-  {
-    id: uuid
-    orderId: uuid
-    warehouses: Json: [
-      {
-        "name": "Kho Trung Trực",
-        "address": "Số 15 Hoàng Cầu, Đông Anh, Hà Nội",
-        "time": "2026-01-20T08:30:00Z",
-      },
-      {
-        "name": "Kho Nguyễn Trãi",
-        "address": "Số 3 Tiên Quang, Gia Lâm, Hà Nội",
-        "time": "2026-01-21T09:15:00Z",
-      }
-    ],
-    shipper: Json: { 
-      "name": "Lê Trung Đức", 
-      "phoneNumber": "0982134546", 
-      "time": "2026-01-21T09:15:00Z",
-    }
-  }
-
-  {
-    orderId: uuid
-    success: false
-  }
-
-  {
-    orderId: uuid
-    warehouse: {
-      name: string
-      address: string
-    }
-  }
-*/
-/*
-}
-  success: true
-  message: "Get order to shipper successfully"
-  data: {
-    order: {
-      id: "",
-      user: {
-        id: "",
-        name: "",
-        phoneNumber: "",
-        shippingAddress: "Số 7, đường Phan Chu Trinh, Hai Bà Trưng, Hà Nội",
-      },
-      shop: {
-        id: "",
-        name: "",
-        phoneNumber: "",
-        shopAddress: "Số 7, đường Phan Chu Trinh, Hai Bà Trưng, Hà Nội",
-      },
-      shippingFee: 15000,
-      price: 390000 hoặc 0 nếu đã thanh toán,
-      productList: [
-        {
-          name: "Áo thun Silomon tay cộc",
-          sku: "nâu-XL",
-          quantity: 2,
-        },
-        {
-          name: "Áo thun Silomon tay cộc",
-          sku: "xanh-L",
-          quantity: 1,
-        },
-        {
-          name: "Quần âu May 10 form đứng",
-          sku: "đen-XL",
-          quantity: 1,
-        },
-      ],
-    },
-  }
-}
-*/
+ 

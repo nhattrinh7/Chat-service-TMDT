@@ -1,4 +1,5 @@
 
-export interface IOrderRepository {
+
+export interface IConversationRepository {
 }
-export const ORDER_REPOSITORY = Symbol('IOrderRepository')
+export const CONVERSATION_REPOSITORY = Symbol('IConversationRepository')

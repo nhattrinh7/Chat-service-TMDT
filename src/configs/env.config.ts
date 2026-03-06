@@ -9,6 +9,15 @@ class EnvConfig {
       SERVICE_NAME: this.configService.get<string>('SERVICE_NAME'),
       SERVICE_HOST: this.configService.get<string>('SERVICE_HOST'),
       PORT: this.configService.get<string>('PORT'),
+      ACCESS_TOKEN_SECRET: this.configService.get<string>('ACCESS_TOKEN_SECRET')!,
+    }
+  }
+
+  get cloudinary() {
+    return {
+      CLOUDINARY_CLOUD_NAME: this.configService.get<string>('CLOUDINARY_CLOUD_NAME')!,
+      CLOUDINARY_API_KEY: this.configService.get<string>('CLOUDINARY_API_KEY'),
+      CLOUDINARY_API_SECRET: this.configService.get<string>('CLOUDINARY_API_SECRET'),
     }
   }
 }

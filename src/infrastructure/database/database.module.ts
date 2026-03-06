@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common'
 import { PrismaService } from '~/infrastructure/database/prisma/prisma.service'
-import { ORDER_REPOSITORY } from '~/domain/repositories/order.repository.interface'
-import { OrderRepository } from '~/infrastructure/database/repositories/order.repository'
+import { CONVERSATION_REPOSITORY } from '~/domain/repositories/conversation.repository.interface'
+import { ConversationRepository } from '~/infrastructure/database/repositories/conversation.repository'
+import { MESSAGE_REPOSITORY } from '~/domain/repositories/message.repository.interface'
+import { MessageRepository } from '~/infrastructure/database/repositories/message.repository'
 import { CqrsModule } from '@nestjs/cqrs'
 
 @Module({
@@ -9,13 +11,18 @@ import { CqrsModule } from '@nestjs/cqrs'
   providers: [
     PrismaService,
     {
-      provide: ORDER_REPOSITORY,
-      useClass: OrderRepository,
+      provide: CONVERSATION_REPOSITORY,
+      useClass: ConversationRepository,
     },
-    
+    {
+      provide: MESSAGE_REPOSITORY,
+      useClass: MessageRepository,
+    },
   ],
   exports: [
-    ORDER_REPOSITORY,
+    PrismaService,
+    CONVERSATION_REPOSITORY,
+    MESSAGE_REPOSITORY,
   ],
 })
 export class DatabaseModule {}
