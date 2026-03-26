@@ -4,7 +4,7 @@ import { GetConversationsQuery } from './get-conversations.query'
 import { CONVERSATION_REPOSITORY } from '~/domain/repositories/conversation.repository.interface'
 import type { IConversationRepository } from '~/domain/repositories/conversation.repository.interface'
 import { SenderType } from '~/domain/enums/chat.enum'
-import { encodeCursor, decodeCursor } from '~/shared/utils/cursor.util'
+import { encodeCursor, decodeCursor } from '~/common/utils/cursor.util'
 import { MESSAGE_PUBLISHER, type IMessagePublisher } from '~/domain/contracts/message-publisher.interface'
 import { Conversation } from '~/domain/entities/conversation.entity'
 

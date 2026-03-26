@@ -10,7 +10,7 @@ import { Message } from '~/domain/entities/message.entity'
 import { SenderType, MessageType } from '~/domain/enums/chat.enum'
 import { CloudinaryService } from '~/common/services/cloudinary.service'
 import { ChatGateway } from '~/infrastructure/websocket/chat.gateway'
-import { CLOUDINARY_CHAT_IMAGE_FOLDER } from '~/common/constants/constant'
+import { CLOUDINARY_CHAT_IMAGE_FOLDER, IMAGE_MESSAGE_PREVIEW_TEXT } from '~/common/constants/constant'
 
 @CommandHandler(SendMessageCommand)
 export class SendMessageHandler implements ICommandHandler<SendMessageCommand> {
@@ -79,7 +79,7 @@ export class SendMessageHandler implements ICommandHandler<SendMessageCommand> {
     // Update conversation: lastMessage + unreadCount
     conversation.updateLastMessage(
       savedMessage.id,
-      savedMessage.messageType === MessageType.IMAGE ? '[Hình ảnh]' : savedMessage.message,
+      savedMessage.messageType === MessageType.IMAGE ? IMAGE_MESSAGE_PREVIEW_TEXT : savedMessage.message,
       savedMessage.messageType,
       senderId,
       senderType,

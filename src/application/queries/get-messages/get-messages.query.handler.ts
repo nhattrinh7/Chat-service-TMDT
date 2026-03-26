@@ -3,7 +3,7 @@ import { Inject } from '@nestjs/common'
 import { GetMessagesQuery } from './get-messages.query'
 import { MESSAGE_REPOSITORY } from '~/domain/repositories/message.repository.interface'
 import type { IMessageRepository } from '~/domain/repositories/message.repository.interface'
-import { encodeCursor, decodeCursor } from '~/shared/utils/cursor.util'
+import { encodeCursor, decodeCursor } from '~/common/utils/cursor.util'
 
 @QueryHandler(GetMessagesQuery)
 export class GetMessagesHandler implements IQueryHandler<GetMessagesQuery> {
