@@ -1,5 +1,6 @@
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { NestFactory } from '@nestjs/core'
+import helmet from 'helmet'
 import { AppModule } from './app.module'
 import { Transport, MicroserviceOptions } from '@nestjs/microservices'
 import { ConfigService } from '@nestjs/config'
@@ -9,6 +10,8 @@ import { env } from '~/configs/env.config'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+
+  app.use(helmet())
 
   app.setGlobalPrefix('api')
   app.useGlobalFilters(new GlobalExceptionFilter())
@@ -43,3 +46,4 @@ async function bootstrap() {
 
 // eslint-disable-next-line no-console
 bootstrap().catch(console.error)
+
