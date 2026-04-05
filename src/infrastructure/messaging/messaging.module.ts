@@ -12,7 +12,7 @@ import { CqrsModule } from '@nestjs/cqrs'
         name: 'NOTIFICATION_CLIENT',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://admin:admin123@localhost:5672'],
+          urls: [`amqp://admin:admin123@${process.env.RABBITMQ_HOST || 'localhost'}:5672`],
           queue: 'notification_queue',
           persistent: true,
         },
@@ -21,7 +21,7 @@ import { CqrsModule } from '@nestjs/cqrs'
         name: 'USER_CLIENT',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://admin:admin123@localhost:5672'],
+          urls: [`amqp://admin:admin123@${process.env.RABBITMQ_HOST || 'localhost'}:5672`],
           queue: 'user_queue',
           persistent: true,
         },
@@ -30,7 +30,7 @@ import { CqrsModule } from '@nestjs/cqrs'
         name: 'SHOP_CLIENT',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://admin:admin123@localhost:5672'],
+          urls: [`amqp://admin:admin123@${process.env.RABBITMQ_HOST || 'localhost'}:5672`],
           queue: 'shop_queue',
           persistent: true,
         },

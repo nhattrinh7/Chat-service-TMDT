@@ -26,9 +26,19 @@ import { RequestLoggingMiddleware } from '~/common/middleware/request-logging.mi
       }
     ]),
     ConfigModule.forRoot({
+      envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,      
       isGlobal: true,
       validationSchema: Joi.object({
         DATABASE_URL: Joi.string().required(),
+      
+        SERVICE_NAME: Joi.string().required(),
+        SERVICE_HOST: Joi.string().required(),
+        PORT: Joi.number().required(),
+        CLOUDINARY_CLOUD_NAME: Joi.string().required(),
+        CLOUDINARY_API_KEY: Joi.string().required(),
+        CLOUDINARY_API_SECRET: Joi.string().allow('').optional(),
+        ACCESS_TOKEN_SECRET: Joi.string().allow('').optional(),
+        RABBITMQ_HOST: Joi.string().required(),
       }),
       validationOptions: {
         abortEarly: true, // Show 1 errors per times
