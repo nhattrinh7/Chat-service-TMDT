@@ -3,9 +3,7 @@ import { JwtModule } from '@nestjs/jwt'
 import { ChatGateway } from '~/infrastructure/websocket/chat.gateway'
 
 @Module({
-  imports: [
-    JwtModule.register({}),
-  ],
+  imports: [JwtModule.register({})],
   providers: [ChatGateway],
   exports: [ChatGateway],
 })

@@ -5,7 +5,10 @@ import { CONVERSATION_REPOSITORY } from '~/domain/repositories/conversation.repo
 import type { IConversationRepository } from '~/domain/repositories/conversation.repository.interface'
 import { SenderType } from '~/domain/enums/chat.enum'
 import { encodeCursor, decodeCursor } from '~/common/utils/cursor.util'
-import { MESSAGE_PUBLISHER, type IMessagePublisher } from '~/domain/contracts/message-publisher.interface'
+import {
+  MESSAGE_PUBLISHER,
+  type IMessagePublisher,
+} from '~/domain/contracts/message-publisher.interface'
 import { Conversation } from '~/domain/entities/conversation.entity'
 
 @QueryHandler(GetConversationsQuery)
@@ -29,9 +32,19 @@ export class GetConversationsHandler implements IQueryHandler<GetConversationsQu
 
     let conversations: Conversation[] = []
     if (participantType === SenderType.USER) {
-      conversations = await this.conversationRepo.findByUserId(participantId, cursorTimestamp, cursorId, limit)
+      conversations = await this.conversationRepo.findByUserId(
+        participantId,
+        cursorTimestamp,
+        cursorId,
+        limit,
+      )
     } else {
-      conversations = await this.conversationRepo.findByShopId(participantId, cursorTimestamp, cursorId, limit)
+      conversations = await this.conversationRepo.findByShopId(
+        participantId,
+        cursorTimestamp,
+        cursorId,
+        limit,
+      )
     }
 
     const userIds = [...new Set(conversations.map(c => c.userId))]
@@ -42,14 +55,14 @@ export class GetConversationsHandler implements IQueryHandler<GetConversationsQu
 
     try {
       const [users, shops] = await Promise.all([
-        this.messagePublisher.sendToUserService<{ userIds: string[] }, Array<{ id: string; username: string; avatar: string | null }>>(
-          'get.users_info',
-          { userIds },
-        ),
-        this.messagePublisher.sendToShopService<{ shopIds: string[] }, Array<{ id: string; name: string; logo: string | null }>>(
-          'get.shop.simple_data',
-          { shopIds },
-        ),
+        this.messagePublisher.sendToUserService<
+          { userIds: string[] },
+          Array<{ id: string; username: string; avatar: string | null }>
+        >('get.users_info', { userIds }),
+        this.messagePublisher.sendToShopService<
+          { shopIds: string[] },
+          Array<{ id: string; name: string; logo: string | null }>
+        >('get.shop.simple_data', { shopIds }),
       ])
       usersInfo = users
       shopsInfo = shops
@@ -88,9 +101,10 @@ export class GetConversationsHandler implements IQueryHandler<GetConversationsQu
 
     // Compound cursor-based pagination meta
     const lastConv = conversations[conversations.length - 1]
-    const nextCursor = conversations.length === limit && lastConv
-      ? encodeCursor(lastConv.updatedAt, lastConv.id)
-      : null
+    const nextCursor =
+      conversations.length === limit && lastConv
+        ? encodeCursor(lastConv.updatedAt, lastConv.id)
+        : null
 
     return {
       data,

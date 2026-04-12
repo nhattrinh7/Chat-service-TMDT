@@ -9,7 +9,7 @@ export class CloudinaryService {
       cloud_name: this.configService.get('CLOUDINARY_CLOUD_NAME'),
       api_key: this.configService.get('CLOUDINARY_API_KEY'),
       api_secret: this.configService.get('CLOUDINARY_API_SECRET'),
-    });
+    })
   }
 
   async uploadImageToCloudinary(
@@ -17,14 +17,15 @@ export class CloudinaryService {
     folder?: string,
   ): Promise<UploadApiResponse> {
     return new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
+      cloudinary.uploader
+        .upload_stream(
           {
             folder: folder || 'chat-image',
             resource_type: 'auto',
           },
           (error, result) => {
             if (error) return reject(new Error(error.message || 'Upload failed'))
-            if (!result) return reject(new Error('Upload result is undefined'));
+            if (!result) return reject(new Error('Upload result is undefined'))
             resolve(result)
           },
         )
@@ -37,9 +38,7 @@ export class CloudinaryService {
       const result = await cloudinary.uploader.destroy(publicId)
       return result
     } catch (error) {
-      throw new Error(
-        error instanceof Error ? error.message : 'Delete failed',
-      )
+      throw new Error(error instanceof Error ? error.message : 'Delete failed')
     }
   }
 }

@@ -12,33 +12,15 @@ import { GetConversationsHandler } from './queries/get-conversations/get-convers
 import { GetMessagesHandler } from './queries/get-messages/get-messages.query.handler'
 import { GetUnreadCountHandler } from './queries/get-unread-count/get-unread-count.query.handler'
 
-const CommandHandlers = [
-  SendMessageHandler,
-  MarkAsReadHandler,
-  DeleteMessageHandler,
-]
+const CommandHandlers = [SendMessageHandler, MarkAsReadHandler, DeleteMessageHandler]
 
-const QueryHandlers = [
-  GetConversationsHandler,
-  GetMessagesHandler,
-  GetUnreadCountHandler,
-]
+const QueryHandlers = [GetConversationsHandler, GetMessagesHandler, GetUnreadCountHandler]
 
 const EventHandlers = []
 
 @Module({
-  imports: [
-    CqrsModule,
-    DatabaseModule,
-    MessagingModule,
-    WebsocketModule,
-  ],
-  providers: [
-    ...CommandHandlers,
-    ...QueryHandlers,
-    ...EventHandlers,
-    CloudinaryService,
-  ],
+  imports: [CqrsModule, DatabaseModule, MessagingModule, WebsocketModule],
+  providers: [...CommandHandlers, ...QueryHandlers, ...EventHandlers, CloudinaryService],
   exports: [],
 })
 export class ApplicationModule {}

@@ -6,7 +6,7 @@ export const GetMessagesQuerySchema = z.object({
   limit: z
     .string()
     .optional()
-    .transform((val) => (val ? parseInt(val, 10) : 10))
+    .transform(val => (val ? parseInt(val, 10) : 10))
     .pipe(z.number().int().positive().max(100)),
 })
 export class GetMessagesQueryDto extends createZodDto(GetMessagesQuerySchema) {}

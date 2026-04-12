@@ -13,7 +13,12 @@ export class MessageRepository implements IMessageRepository {
     return raw ? MessageMapper.toDomain(raw) : null
   }
 
-  async findByConversationId(conversationId: string, cursorTimestamp?: Date, cursorId?: string, limit: number = 30): Promise<Message[]> {
+  async findByConversationId(
+    conversationId: string,
+    cursorTimestamp?: Date,
+    cursorId?: string,
+    limit: number = 30,
+  ): Promise<Message[]> {
     const whereClause: any = { conversationId }
 
     // Compound cursor-based: lấy messages cũ hơn cursor (scroll up to load more)
@@ -31,7 +36,7 @@ export class MessageRepository implements IMessageRepository {
     })
 
     // Trả về theo thứ tự cũ → mới để FE render đúng thứ tự
-    return results.reverse().map((r) => MessageMapper.toDomain(r))
+    return results.reverse().map(r => MessageMapper.toDomain(r))
   }
 
   async save(message: Message): Promise<Message> {

@@ -20,7 +20,12 @@ export class ConversationRepository implements IConversationRepository {
     return raw ? ConversationMapper.toDomain(raw) : null
   }
 
-  async findByUserId(userId: string, cursorTimestamp?: Date, cursorId?: string, limit: number = 20): Promise<Conversation[]> {
+  async findByUserId(
+    userId: string,
+    cursorTimestamp?: Date,
+    cursorId?: string,
+    limit: number = 20,
+  ): Promise<Conversation[]> {
     const whereClause: any = { userId }
 
     // Compound cursor-based pagination: lấy conversations cũ hơn cursor
@@ -37,10 +42,15 @@ export class ConversationRepository implements IConversationRepository {
       take: limit,
     })
 
-    return results.map((r) => ConversationMapper.toDomain(r))
+    return results.map(r => ConversationMapper.toDomain(r))
   }
 
-  async findByShopId(shopId: string, cursorTimestamp?: Date, cursorId?: string, limit: number = 20): Promise<Conversation[]> {
+  async findByShopId(
+    shopId: string,
+    cursorTimestamp?: Date,
+    cursorId?: string,
+    limit: number = 20,
+  ): Promise<Conversation[]> {
     const whereClause: any = { shopId }
 
     // Compound cursor-based pagination
@@ -57,7 +67,7 @@ export class ConversationRepository implements IConversationRepository {
       take: limit,
     })
 
-    return results.map((r) => ConversationMapper.toDomain(r))
+    return results.map(r => ConversationMapper.toDomain(r))
   }
 
   async save(conversation: Conversation): Promise<Conversation> {
@@ -100,7 +110,10 @@ export class ConversationRepository implements IConversationRepository {
     return ConversationMapper.toDomain(raw)
   }
 
-  async countUnreadConversations(participantId: string, participantType: 'USER' | 'SHOP'): Promise<number> {
+  async countUnreadConversations(
+    participantId: string,
+    participantType: 'USER' | 'SHOP',
+  ): Promise<number> {
     if (participantType === 'USER') {
       return this.prisma.conversation.count({
         where: { userId: participantId, unreadCountUser: { gt: 0 } },

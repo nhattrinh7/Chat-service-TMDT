@@ -19,10 +19,6 @@ import { CqrsModule } from '@nestjs/cqrs'
       useClass: MessageRepository,
     },
   ],
-  exports: [
-    PrismaService,
-    CONVERSATION_REPOSITORY,
-    MESSAGE_REPOSITORY,
-  ],
+  exports: [PrismaService, CONVERSATION_REPOSITORY, MESSAGE_REPOSITORY],
 })
 export class DatabaseModule {}

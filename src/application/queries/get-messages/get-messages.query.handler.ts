@@ -7,9 +7,7 @@ import { encodeCursor, decodeCursor } from '~/common/utils/cursor.util'
 
 @QueryHandler(GetMessagesQuery)
 export class GetMessagesHandler implements IQueryHandler<GetMessagesQuery> {
-  constructor(
-    @Inject(MESSAGE_REPOSITORY) private readonly messageRepo: IMessageRepository,
-  ) {}
+  constructor(@Inject(MESSAGE_REPOSITORY) private readonly messageRepo: IMessageRepository) {}
 
   async execute(query: GetMessagesQuery) {
     const { conversationId, cursor, limit = 30 } = query
@@ -23,7 +21,12 @@ export class GetMessagesHandler implements IQueryHandler<GetMessagesQuery> {
       cursorId = decoded.id
     }
 
-    const messages = await this.messageRepo.findByConversationId(conversationId, cursorTimestamp, cursorId, limit)
+    const messages = await this.messageRepo.findByConversationId(
+      conversationId,
+      cursorTimestamp,
+      cursorId,
+      limit,
+    )
 
     const data = messages.map(msg => ({
       id: msg.id,
@@ -41,9 +44,10 @@ export class GetMessagesHandler implements IQueryHandler<GetMessagesQuery> {
 
     // Compound cursor: lấy message cũ nhất (đầu mảng vì đã reverse cũ→mới) để làm cursor
     const oldestMsg = messages[0]
-    const nextCursor = messages.length === limit && oldestMsg
-      ? encodeCursor(oldestMsg.createdAt, oldestMsg.id)
-      : null
+    const nextCursor =
+      messages.length === limit && oldestMsg
+        ? encodeCursor(oldestMsg.createdAt, oldestMsg.id)
+        : null
 
     return {
       data,

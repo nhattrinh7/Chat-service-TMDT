@@ -34,7 +34,9 @@ export class DeleteMessageHandler implements ICommandHandler<DeleteMessageComman
     // Nếu tin nhắn bị xóa là lastMessage của conversation → update lại cho tin nhắn gần nhất chưa bị xóa làm lastMessage mới
     const conversation = await this.conversationRepo.findById(message.conversationId)
     if (conversation && conversation.lastMessageId === messageId) {
-      const newLastMessage = await this.messageRepo.findLastMessageByConversationId(message.conversationId)
+      const newLastMessage = await this.messageRepo.findLastMessageByConversationId(
+        message.conversationId,
+      )
 
       if (newLastMessage) {
         conversation.updateLastMessage(

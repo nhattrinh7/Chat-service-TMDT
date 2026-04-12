@@ -10,7 +10,10 @@ import { Message } from '~/domain/entities/message.entity'
 import { SenderType, MessageType } from '~/domain/enums/chat.enum'
 import { CloudinaryService } from '~/common/services/cloudinary.service'
 import { ChatGateway } from '~/infrastructure/websocket/chat.gateway'
-import { CLOUDINARY_CHAT_IMAGE_FOLDER, IMAGE_MESSAGE_PREVIEW_TEXT } from '~/common/constants/constant'
+import {
+  CLOUDINARY_CHAT_IMAGE_FOLDER,
+  IMAGE_MESSAGE_PREVIEW_TEXT,
+} from '~/common/constants/constant'
 
 @CommandHandler(SendMessageCommand)
 export class SendMessageHandler implements ICommandHandler<SendMessageCommand> {
@@ -30,13 +33,18 @@ export class SendMessageHandler implements ICommandHandler<SendMessageCommand> {
     let conversation = await this.conversationRepo.findByUserAndShop(userId, shopId)
 
     if (senderType === SenderType.SHOP && !conversation) {
-      throw new ForbiddenException('Shop không thể bắt đầu cuộc trò chuyện. Phải đợi người mua nhắn trước.')
+      throw new ForbiddenException(
+        'Shop không thể bắt đầu cuộc trò chuyện. Phải đợi người mua nhắn trước.',
+      )
     }
 
     // Upload ảnh nếu messageType là IMAGE
     if (messageType === MessageType.IMAGE) {
       if (!file) throw new BadRequestException('Cần gửi file ảnh khi messageType là IMAGE')
-      const uploadResult = await this.cloudinaryService.uploadImageToCloudinary(file, CLOUDINARY_CHAT_IMAGE_FOLDER)
+      const uploadResult = await this.cloudinaryService.uploadImageToCloudinary(
+        file,
+        CLOUDINARY_CHAT_IMAGE_FOLDER,
+      )
       message = uploadResult.secure_url
     }
 
@@ -79,7 +87,9 @@ export class SendMessageHandler implements ICommandHandler<SendMessageCommand> {
     // Update conversation: lastMessage + unreadCount
     conversation.updateLastMessage(
       savedMessage.id,
-      savedMessage.messageType === MessageType.IMAGE ? IMAGE_MESSAGE_PREVIEW_TEXT : savedMessage.message,
+      savedMessage.messageType === MessageType.IMAGE
+        ? IMAGE_MESSAGE_PREVIEW_TEXT
+        : savedMessage.message,
       savedMessage.messageType,
       senderId,
       senderType,

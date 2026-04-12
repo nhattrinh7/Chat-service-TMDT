@@ -25,19 +25,45 @@ export class Message extends AggregateRoot {
     this.props = props
   }
 
-  get id() { return this.props.id }
-  get conversationId() { return this.props.conversationId }
-  get senderId() { return this.props.senderId }
-  get senderType() { return this.props.senderType }
-  get messageType() { return this.props.messageType }
-  get message() { return this.props.message }
-  get replyToMessageId() { return this.props.replyToMessageId }
-  get replyToMessageContent() { return this.props.replyToMessageContent }
-  get replyToSenderType() { return this.props.replyToSenderType }
-  get deletedAt() { return this.props.deletedAt }
-  get createdAt() { return this.props.createdAt }
-  get updatedAt() { return this.props.updatedAt }
-  get isDeleted() { return this.props.deletedAt !== null }
+  get id() {
+    return this.props.id
+  }
+  get conversationId() {
+    return this.props.conversationId
+  }
+  get senderId() {
+    return this.props.senderId
+  }
+  get senderType() {
+    return this.props.senderType
+  }
+  get messageType() {
+    return this.props.messageType
+  }
+  get message() {
+    return this.props.message
+  }
+  get replyToMessageId() {
+    return this.props.replyToMessageId
+  }
+  get replyToMessageContent() {
+    return this.props.replyToMessageContent
+  }
+  get replyToSenderType() {
+    return this.props.replyToSenderType
+  }
+  get deletedAt() {
+    return this.props.deletedAt
+  }
+  get createdAt() {
+    return this.props.createdAt
+  }
+  get updatedAt() {
+    return this.props.updatedAt
+  }
+  get isDeleted() {
+    return this.props.deletedAt !== null
+  }
 
   static create(params: {
     conversationId: string

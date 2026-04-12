@@ -13,7 +13,10 @@ export class GetUnreadCountHandler implements IQueryHandler<GetUnreadCountQuery>
   async execute(query: GetUnreadCountQuery) {
     const { participantId, participantType } = query
 
-    const totalUnread = await this.conversationRepo.countUnreadConversations(participantId, participantType)
+    const totalUnread = await this.conversationRepo.countUnreadConversations(
+      participantId,
+      participantType,
+    )
 
     return { totalUnread }
   }

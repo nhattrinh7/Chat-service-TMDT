@@ -46,7 +46,7 @@ export class ChatController {
   ) {
     const { cursor, limit, type, shopId } = query
     const participantType = type === 'shop' ? SenderType.SHOP : SenderType.USER
-    const participantId = participantType === SenderType.SHOP ? (shopId || '') : userId
+    const participantId = participantType === SenderType.SHOP ? shopId || '' : userId
 
     const result = await this.queryBus.execute(
       new GetConversationsQuery(participantId, participantType, cursor, limit),
@@ -60,14 +60,9 @@ export class ChatController {
    * Lấy messages trong 1 conversation (cursor-based)
    */
   @Get('conversations/:id/messages')
-  async getMessages(
-    @Param('id') conversationId: string,
-    @Query() query: GetMessagesQueryDto,
-  ) {
+  async getMessages(@Param('id') conversationId: string, @Query() query: GetMessagesQueryDto) {
     const { cursor, limit } = query
-    const result = await this.queryBus.execute(
-      new GetMessagesQuery(conversationId, cursor, limit),
-    )
+    const result = await this.queryBus.execute(new GetMessagesQuery(conversationId, cursor, limit))
 
     return { message: 'Lấy tin nhắn thành công', ...result }
   }
@@ -101,7 +96,7 @@ export class ChatController {
   ) {
     // Khi USER gửi: userId = x-user-id (chính người đó)
     // Khi SHOP gửi: userId = bodyUserId (buyer userId được FE truyền qua body)
-    const buyerUserId = senderType === SenderType.SHOP ? (bodyUserId || headerUserId) : headerUserId
+    const buyerUserId = senderType === SenderType.SHOP ? bodyUserId || headerUserId : headerUserId
 
     const result = await this.commandBus.execute(
       new SendMessageCommand(
@@ -166,7 +161,7 @@ export class ChatController {
     @Query('shopId') shopId?: string,
   ) {
     const participantType = type === 'shop' ? SenderType.SHOP : SenderType.USER
-    const participantId = participantType === SenderType.SHOP ? (shopId || '') : userId
+    const participantId = participantType === SenderType.SHOP ? shopId || '' : userId
 
     const result = await this.queryBus.execute(
       new GetUnreadCountQuery(participantId, participantType),

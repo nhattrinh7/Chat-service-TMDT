@@ -32,8 +32,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.auth?.token
-        || client.handshake.headers?.authorization?.replace('Bearer ', '')
+      const token =
+        client.handshake.auth?.token ||
+        client.handshake.headers?.authorization?.replace('Bearer ', '')
 
       if (!token) {
         this.logger.warn(`Client ${client.id} connection rejected: no token`)
@@ -89,7 +90,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * Emit khi tin nhắn bị xóa
    */
-  emitMessageDeleted(userId: string, shopId: string, data: { messageId: string; conversationId: string }) {
+  emitMessageDeleted(
+    userId: string,
+    shopId: string,
+    data: { messageId: string; conversationId: string },
+  ) {
     this.server.to(`user:${userId}`).emit('chat:messageDeleted', data)
     this.server.to(`shop:${shopId}`).emit('chat:messageDeleted', data)
   }
@@ -97,7 +102,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * Emit khi messages được đọc
    */
-  emitMessagesRead(userId: string, shopId: string, data: { conversationId: string; readBy: string; readByType: string }) {
+  emitMessagesRead(
+    userId: string,
+    shopId: string,
+    data: { conversationId: string; readBy: string; readByType: string },
+  ) {
     this.server.to(`user:${userId}`).emit('chat:messagesRead', data)
     this.server.to(`shop:${shopId}`).emit('chat:messagesRead', data)
   }
@@ -105,7 +114,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * Emit cập nhật unread count cho 1 user hoặc shop cụ thể
    */
-  emitUnreadCountUpdate(targetId: string, targetType: 'USER' | 'SHOP', data: { totalUnread: number }) {
+  emitUnreadCountUpdate(
+    targetId: string,
+    targetType: 'USER' | 'SHOP',
+    data: { totalUnread: number },
+  ) {
     const roomPrefix = targetType === 'USER' ? 'user' : 'shop'
     this.server.to(`${roomPrefix}:${targetId}`).emit('chat:unreadCountUpdate', data)
   }
@@ -118,7 +131,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.to(`shop:${shopId}`).emit('chat:conversationUpdated', conversation)
   }
 
-  private async verifyAccessToken(token: string): Promise<{ userId: string; roleId: string } | null> {
+  private async verifyAccessToken(
+    token: string,
+  ): Promise<{ userId: string; roleId: string } | null> {
     try {
       const payload = await this.jwtService.verifyAsync<{ userId: string; roleId: string }>(token, {
         secret: this.accessTokenSecret,

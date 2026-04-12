@@ -6,7 +6,7 @@ export const GetConversationsQuerySchema = z.object({
   limit: z
     .string()
     .optional()
-    .transform((val) => (val ? parseInt(val, 10) : 20))
+    .transform(val => (val ? parseInt(val, 10) : 20))
     .pipe(z.number().int().positive().max(50)),
   type: z.enum(['user', 'shop']).optional(),
   shopId: z.uuid().optional(),

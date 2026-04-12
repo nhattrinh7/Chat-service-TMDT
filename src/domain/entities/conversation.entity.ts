@@ -22,21 +22,51 @@ interface ConversationProps {
 export class Conversation {
   private constructor(private props: ConversationProps) {}
 
-  get id() { return this.props.id }
-  get userId() { return this.props.userId }
-  get shopId() { return this.props.shopId }
-  get lastMessageId() { return this.props.lastMessageId }
-  get lastMessageContent() { return this.props.lastMessageContent }
-  get lastMessageType() { return this.props.lastMessageType }
-  get lastMessageAt() { return this.props.lastMessageAt }
-  get lastMessageSenderId() { return this.props.lastMessageSenderId }
-  get lastMessageSenderType() { return this.props.lastMessageSenderType }
-  get unreadCountUser() { return this.props.unreadCountUser }
-  get unreadCountShop() { return this.props.unreadCountShop }
-  get lastReadMessageIdUser() { return this.props.lastReadMessageIdUser }
-  get lastReadMessageIdShop() { return this.props.lastReadMessageIdShop }
-  get createdAt() { return this.props.createdAt }
-  get updatedAt() { return this.props.updatedAt }
+  get id() {
+    return this.props.id
+  }
+  get userId() {
+    return this.props.userId
+  }
+  get shopId() {
+    return this.props.shopId
+  }
+  get lastMessageId() {
+    return this.props.lastMessageId
+  }
+  get lastMessageContent() {
+    return this.props.lastMessageContent
+  }
+  get lastMessageType() {
+    return this.props.lastMessageType
+  }
+  get lastMessageAt() {
+    return this.props.lastMessageAt
+  }
+  get lastMessageSenderId() {
+    return this.props.lastMessageSenderId
+  }
+  get lastMessageSenderType() {
+    return this.props.lastMessageSenderType
+  }
+  get unreadCountUser() {
+    return this.props.unreadCountUser
+  }
+  get unreadCountShop() {
+    return this.props.unreadCountShop
+  }
+  get lastReadMessageIdUser() {
+    return this.props.lastReadMessageIdUser
+  }
+  get lastReadMessageIdShop() {
+    return this.props.lastReadMessageIdShop
+  }
+  get createdAt() {
+    return this.props.createdAt
+  }
+  get updatedAt() {
+    return this.props.updatedAt
+  }
 
   static create(userId: string, shopId: string): Conversation {
     return new Conversation({
@@ -62,7 +92,13 @@ export class Conversation {
     return new Conversation(props)
   }
 
-  updateLastMessage(messageId: string, content: string | null, type: MessageType, senderId: string, senderType: SenderType) {
+  updateLastMessage(
+    messageId: string,
+    content: string | null,
+    type: MessageType,
+    senderId: string,
+    senderType: SenderType,
+  ) {
     this.props.lastMessageId = messageId
     this.props.lastMessageContent = content
     this.props.lastMessageType = type
