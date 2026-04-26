@@ -21,7 +21,7 @@ export class GetConversationsHandler implements IQueryHandler<GetConversationsQu
   async execute(query: GetConversationsQuery) {
     const { participantId, participantType, cursor, limit = 20 } = query
 
-    // Decode compound cursor nếu có
+    // Decode compound cursor
     let cursorTimestamp: Date | undefined
     let cursorId: string | undefined
     if (cursor) {
@@ -29,7 +29,7 @@ export class GetConversationsHandler implements IQueryHandler<GetConversationsQu
       cursorTimestamp = decoded.timestamp
       cursorId = decoded.id
     }
-
+  
     let conversations: Conversation[] = []
     if (participantType === SenderType.USER) {
       conversations = await this.conversationRepo.findByUserId(
@@ -47,6 +47,12 @@ export class GetConversationsHandler implements IQueryHandler<GetConversationsQu
       )
     }
 
+    // dùng Set lọc trùng
+    // ví dụ, người gọi lần này là user thì các cuộc trò chuyện: (User_1, Shop_X),  (User_1, Shop_Y), (User_1, Shop_Z)
+    // Sau qua Set: userIds = ['User_1'] và shopIds = ['Shop_X', 'Shop_Y', 'Shop_Z']
+    //-----------
+    // và ngược lại nếu người gọi là shop thì các cuộc trò chuyện: (User_A, Shop_1),  (User_B, Shop_1), (User_C, Shop_1)
+    // Sau qua Set: shopIds = ['Shop_1'] và userIds = ['User_A', 'User_B', 'User_C']  
     const userIds = [...new Set(conversations.map(c => c.userId))]
     const shopIds = [...new Set(conversations.map(c => c.shopId))]
 
@@ -71,9 +77,11 @@ export class GetConversationsHandler implements IQueryHandler<GetConversationsQu
       shopsInfo = []
     }
 
+    // Tạo ra Map với key là id và value là object tương ứng
+    // để khi duyệt qua conversations thì có thể truy xuất nhanh thông tin user hoặc shop thông qua id của họ
     const userMap = new Map(usersInfo.map(u => [u.id, u]))
     const shopMap = new Map(shopsInfo.map(s => [s.id, s]))
-
+ 
     const data = conversations.map(conv => {
       const user = userMap.get(conv.userId)
       const shop = shopMap.get(conv.shopId)
@@ -90,6 +98,8 @@ export class GetConversationsHandler implements IQueryHandler<GetConversationsQu
         lastMessageSenderType: conv.lastMessageSenderType,
         unreadCountUser: conv.unreadCountUser,
         unreadCountShop: conv.unreadCountShop,
+        lastReadMessageIdUser: conv.lastReadMessageIdUser,
+        lastReadMessageIdShop: conv.lastReadMessageIdShop,
         createdAt: conv.createdAt,
         updatedAt: conv.updatedAt,
         userName: user?.username,
@@ -110,7 +120,7 @@ export class GetConversationsHandler implements IQueryHandler<GetConversationsQu
       data,
       meta: {
         nextCursor,
-        hasMore: conversations.length === limit,
+        hasMore: conversations.length === limit, // false positive
         limit,
       },
     }

@@ -23,6 +23,7 @@ import { SenderType, MessageType } from '~/domain/enums/chat.enum'
 import { GetConversationsQuery } from '~/application/queries/get-conversations/get-conversations.query'
 import { GetMessagesQuery } from '~/application/queries/get-messages/get-messages.query'
 import { GetUnreadCountQuery } from '~/application/queries/get-unread-count/get-unread-count.query'
+import { CheckConversationQuery } from '~/application/queries/check-conversation/check-conversation.query'
 import { GetConversationsQueryDto } from '~/presentation/dtos/conversation.dto'
 import { GetMessagesQueryDto } from '~/presentation/dtos/message.dto'
 
@@ -32,6 +33,24 @@ export class ChatController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
   ) {}
+
+  /**
+   * GET /v1/chats/conversations/check
+   * Kiểm tra xem user và shop đã từng có cuộc hội thoại chưa
+   */
+  @Get('conversations/check')
+  async checkConversation(
+    @Headers('x-user-id') userId: string,
+    @Query('shopId') shopId: string,
+  ) {
+    if (!shopId) return { message: 'Thiếu shopId', data: null }
+    
+    const result = await this.queryBus.execute(
+      new CheckConversationQuery(userId, shopId),
+    )
+
+    return { message: 'Kiểm tra cuộc trò chuyện có tồn tại hay không thành công', data: result }
+  }
 
   /**
    * GET /v1/chats/conversations
@@ -60,7 +79,10 @@ export class ChatController {
    * Lấy messages trong 1 conversation (cursor-based)
    */
   @Get('conversations/:id/messages')
-  async getMessages(@Param('id') conversationId: string, @Query() query: GetMessagesQueryDto) {
+  async getMessages(
+    @Param('id') conversationId: string, 
+    @Query() query: GetMessagesQueryDto
+  ) {
     const { cursor, limit } = query
     const result = await this.queryBus.execute(new GetMessagesQuery(conversationId, cursor, limit))
 
@@ -123,10 +145,10 @@ export class ChatController {
     @Param('id') conversationId: string,
     @Headers('x-user-id') userId: string,
     @Body('readByType') readByType: SenderType,
-    @Body('readBy') readBy: string,
+    @Body('readById') readById: string,
   ) {
     await this.commandBus.execute(
-      new MarkAsReadCommand(conversationId, readBy || userId, readByType || SenderType.USER),
+      new MarkAsReadCommand(conversationId, readById || userId, readByType || SenderType.USER),
     )
 
     return { message: 'Đã đánh dấu đã đọc' }

@@ -81,6 +81,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   /**
    * Emit tin nhắn mới đến cả 2 bên trong conversation
+   * Chạy khi có 1 người send message (User hoặc Shop)
    */
   emitNewMessage(userId: string, shopId: string, message: any) {
     this.server.to(`user:${userId}`).emit('chat:newMessage', message)
@@ -105,22 +106,29 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   emitMessagesRead(
     userId: string,
     shopId: string,
-    data: { conversationId: string; readBy: string; readByType: string },
+    data: {
+      conversationId: string,
+      readById: string,
+      readByType: string,
+      lastReadMessageId: string
+    },
   ) {
     this.server.to(`user:${userId}`).emit('chat:messagesRead', data)
     this.server.to(`shop:${shopId}`).emit('chat:messagesRead', data)
   }
 
+  //--------- khi 1 message được gửi, tại send-message hander gọi cả 2 emit sau---------------
   /**
-   * Emit cập nhật unread count cho 1 user hoặc shop cụ thể
+   * Emit cập nhật 'số conversations có tin nhắn chưa đọc' cho 1 user hoặc shop cụ thể để hiển thị lên ChatBubble
+   * Còn cập nhật số tin nhắn chưa đọc trong 1 conversation cụ thể thì là thằng emitConversationUpdated bên dưới
    */
-  emitUnreadCountUpdate(
+  emitTotalUnreadCountUpdate(
     targetId: string,
     targetType: 'USER' | 'SHOP',
     data: { totalUnread: number },
   ) {
     const roomPrefix = targetType === 'USER' ? 'user' : 'shop'
-    this.server.to(`${roomPrefix}:${targetId}`).emit('chat:unreadCountUpdate', data)
+    this.server.to(`${roomPrefix}:${targetId}`).emit('chat:totalUnreadCountUpdate', data)
   }
 
   /**

@@ -33,6 +33,7 @@ model Conversation {
   lastMessageSenderType SenderType? @map("last_message_sender_type")
 
   // Đếm tin nhắn chưa đọc cho từng bên
+  // sau này chắc đặt là unreadCountMessageUser và unreadCountMessageShop còn totalUnread thì là unreadConversationCountUser/Shop
   unreadCountUser Int @default(0) @map("unread_count_user")
   unreadCountShop Int @default(0) @map("unread_count_shop")
 

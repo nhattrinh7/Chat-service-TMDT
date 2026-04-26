@@ -11,10 +11,11 @@ import { DeleteMessageHandler } from './commands/delete-message/delete-message.c
 import { GetConversationsHandler } from './queries/get-conversations/get-conversations.query.handler'
 import { GetMessagesHandler } from './queries/get-messages/get-messages.query.handler'
 import { GetUnreadCountHandler } from './queries/get-unread-count/get-unread-count.query.handler'
+import { CheckConversationHandler } from './queries/check-conversation/check-conversation.query.handler'
 
 const CommandHandlers = [SendMessageHandler, MarkAsReadHandler, DeleteMessageHandler]
 
-const QueryHandlers = [GetConversationsHandler, GetMessagesHandler, GetUnreadCountHandler]
+const QueryHandlers = [GetConversationsHandler, GetMessagesHandler, GetUnreadCountHandler, CheckConversationHandler]
 
 const EventHandlers = []
 

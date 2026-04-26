@@ -17,7 +17,7 @@ export class MarkAsReadHandler implements ICommandHandler<MarkAsReadCommand> {
   ) {}
 
   async execute(command: MarkAsReadCommand) {
-    const { conversationId, readBy, readByType } = command
+    const { conversationId, readById, readByType } = command
 
     const conversation = await this.conversationRepo.findById(conversationId)
     if (!conversation) throw new NotFoundException('Cuộc trò chuyện không tồn tại')
@@ -26,6 +26,7 @@ export class MarkAsReadHandler implements ICommandHandler<MarkAsReadCommand> {
     const lastMessage = await this.messageRepo.findLastMessageByConversationId(conversationId)
     if (!lastMessage) return
 
+    // Cập nhật unreadCount và lastReadMessageId
     if (readByType === SenderType.USER) {
       conversation.markAsReadByUser(lastMessage.id)
     } else {
@@ -34,15 +35,22 @@ export class MarkAsReadHandler implements ICommandHandler<MarkAsReadCommand> {
 
     await this.conversationRepo.update(conversation)
 
-    // Emit socket: thông báo cho cả 2 bên
+    // Emit socket: thông báo cho cả 2 bên, cần thông báo cho cả 2 bên vì:
+    // bên gửi cần cập nhật hiển thị chứ 'Đã xem'
+    // bên nhận cần reset badge đỏ đỏ hiển thị số tin nhắn chưa đọc về 0
     this.chatGateway.emitMessagesRead(conversation.userId, conversation.shopId, {
       conversationId,
-      readBy,
+      readById,
       readByType,
+      lastReadMessageId: lastMessage.id,
+      // lastReadMessageId là tin nhắn cuối của conversation, có thể là tin nhắn của user hoặc shop
     })
 
-    // Update unread count tổng cho bên đang đọc
-    const totalUnread = await this.conversationRepo.countUnreadConversations(readBy, readByType)
-    this.chatGateway.emitUnreadCountUpdate(readBy, readByType, { totalUnread })
+    // Update unreadCount tổng cho bên đang đọc:
+
+    // Đếm lại tổng số cuộc trò chuyện chưa đọc của người gọi api này (là tổng số cuộc trò chuyện có tin nhắn chưa đọc)
+    const totalUnread = await this.conversationRepo.countUnreadConversations(readById, readByType)
+    // Thông báo cho chính mình (người nhận tin nhắn) cập nhật chấm đỏ ở ChatBuble
+    this.chatGateway.emitTotalUnreadCountUpdate(readById, readByType, { totalUnread })
   }
 }

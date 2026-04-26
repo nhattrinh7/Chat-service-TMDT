@@ -63,10 +63,10 @@ export class SendMessageHandler implements ICommandHandler<SendMessageCommand> {
     let replyToSenderType: SenderType | null = null
 
     if (replyToMessageId) {
-      const replyToMessage = await this.messageRepo.findById(replyToMessageId)
-      if (replyToMessage && !replyToMessage.isDeleted) {
-        replyToMessageContent = replyToMessage.message
-        replyToSenderType = replyToMessage.senderType
+      const repliedMessage = await this.messageRepo.findById(replyToMessageId)
+      if (repliedMessage && !repliedMessage.isDeleted) {
+        replyToMessageContent = repliedMessage.message
+        replyToSenderType = repliedMessage.senderType
       }
     }
 
@@ -120,6 +120,13 @@ export class SendMessageHandler implements ICommandHandler<SendMessageCommand> {
     }
 
     this.chatGateway.emitNewMessage(userId, shopId, messageData)
+
+    // Mỗi lần gửi tin nhắn thì sẽ Emit sự kiện unreadCount tổng cho người nhận để họ cập nhật badge đỏ trên ChatBubble
+    // badge ở ChatBubble lúc này có thể tăng lên 1 hoặc giữ nguyên nếu tại conversation này người nhận vốn đang có tin nhắn chưa đọc rồi
+    const recipientId = senderType === SenderType.USER ? shopId : userId
+    const recipientType = senderType === SenderType.USER ? SenderType.SHOP : SenderType.USER
+    const totalUnreadRecipient = await this.conversationRepo.countUnreadConversations(recipientId, recipientType)
+    this.chatGateway.emitTotalUnreadCountUpdate(recipientId, recipientType, { totalUnread: totalUnreadRecipient })
 
     // Emit conversation updated (cho list conversations cập nhật)
     const conversationData = {
